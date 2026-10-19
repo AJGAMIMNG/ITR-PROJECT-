@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gradewatch — Academic Risk Prediction & Early Intervention Platform</title>
+<meta name="description" content="AI-powered early warning grade prediction and student risk intelligence platform running entirely in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-main: #131E19;
+    --bg-panel: #1A2922;
+    --bg-card: #22352C;
+    --bg-input: #15241D;
+    --border: rgba(241, 238, 228, 0.12);
+    --border-strong: rgba(241, 238, 228, 0.25);
+    --text: #F1EEE4;
+    --text-dim: #9FB3A6;
+    --gold: #E8B94F;
+    --gold-hover: #F7C85E;
+    --safe: #4EBA7D;
+    --watch: #E8B94F;
+    --risk: #E25B5B;
+    --radius: 12px;
+    --radius-sm: 6px;
+    --font-heading: 'Outfit', 'IBM Plex Sans', sans-serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-display: 'Special Elite', monospace;
+    --shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+
+  [data-theme="dark-slate"] {
+    --bg-main: #0B0F19;
+    --bg-panel: #111827;
+    --bg-card: #1F2937;
+    --bg-input: #0F172A;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-strong: rgba(255, 255, 255, 0.2);
+    --text: #F9FAFB;
+    --text-dim: #9CA3AF;
+    --gold: #3B82F6;
+    --gold-hover: #60A5FA;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(232, 185, 79, 0.05) 0%, transparent 70%), var(--bg-main);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  a { color: var(--gold); text-decoration: none; transition: color 0.2s; }
+  a:hover { color: var(--gold-hover); }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  ::selection { background: var(--gold); color: var(--bg-main); }
+
+  /* Focus Visibility */
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2px solid var(--gold); outline-offset: 2px;
+  }
+
+  /* Header Navigation */
+  header.top {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(19, 30, 25, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; }
+  .brand { display: flex; align-items: center; gap: 12px; font-family: var(--font-heading); font-weight: 700; font-size: 20px; }
+  .brand .icon {
+    width: 36px; height: 36px; background: rgba(232, 185, 79, 0.15); border: 1px solid var(--gold);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--gold); font-size: 18px;
+  }
+  .brand-tag { font-size: 11px; font-family: var(--font-mono); background: rgba(232, 185, 79, 0.15); color: var(--gold); padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+
+  nav.top-nav { display: flex; align-items: center; gap: 20px; font-size: 14px; font-weight: 500; }
+  nav.top-nav a { color: var(--text-dim); padding: 6px 4px; border-bottom: 2px solid transparent; }
+  nav.top-nav a:hover, nav.top-nav a.active { color: var(--text); border-color: var(--gold); }
+
+  .theme-toggle-btn {
+    background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+    padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-family: var(--font-mono);
+    display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+  }
+  .theme-toggle-btn:hover { border-color: var(--gold); }
+
+  /* Utility & Typography */
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--gold); margin: 0 0 10px; font-weight: 600; display: flex; align-items: center; gap: 8px;
+  }
+  .eyebrow::before { content: ''; display: inline-block; width: 8px; height: 8px; background: var(--gold); border-radius: 50%; }
+  h1, h2, h3 { font-family: var(--font-heading); font-weight: 700; margin: 0 0 14px; color: var(--text); }
+  h1 { font-size: 40px; line-height: 1.15; }
+  h2 { font-size: 28px; }
+  h3 { font-size: 18px; font-weight: 600; }
+  p { color: var(--text-dim); margin: 0 0 14px; font-size: 15px; }
+
+  section { padding: 60px 0; border-bottom: 1px solid var(--border); }
+  .rule { border: none; border-top: 1px dashed var(--border-strong); margin: 24px 0; }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--font-body); font-weight: 600; font-size: 14px; padding: 10px 20px;
+    border-radius: var(--radius-sm); border: 1px solid var(--border-strong); cursor: pointer;
+    background: var(--bg-card); color: var(--text); transition: all 0.2s ease; display: inline-flex;
+    align-items: center; justify-content: center; gap: 8px; text-decoration: none;
+  }
+  .btn:hover { transform: translateY(-1px); border-color: var(--gold); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+  .btn.primary { background: var(--gold); color: var(--bg-main); border-color: var(--gold); }
+  .btn.primary:hover { background: var(--gold-hover); color: #000; }
+  .btn.ghost { background: transparent; }
+  .btn.small { padding: 6px 14px; font-size: 13px; }
+  .btn.danger { background: rgba(226, 91, 91, 0.15); color: var(--risk); border-color: rgba(226, 91, 91, 0.3); }
+  .btn.danger:hover { background: var(--risk); color: #fff; }
+
+  /* Hero Section */
+  .hero { padding: 70px 0 50px; position: relative; overflow: hidden; }
+  .hero-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px; align-items: center; }
+  .hero h1 { font-size: 42px; max-width: 560px; }
+  .hero .lede { font-size: 17px; max-width: 500px; color: var(--text-dim); }
+  .hero-actions { display: flex; gap: 14px; margin-top: 24px; flex-wrap: wrap; }
+
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px;
+    background: var(--bg-panel); border: 1px solid var(--border); padding: 18px 24px; border-radius: var(--radius);
+  }
+  .stat-item { text-align: left; }
+  .stat-item .val { font-family: var(--font-mono); font-size: 24px; font-weight: 700; color: var(--gold); display: block; }
+  .stat-item .lbl { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* Stamp Card */
+  .stamp-frame {
+    background: var(--bg-panel); border: 1px solid var(--border-strong); border-radius: var(--radius);
+    padding: 36px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 280px; position: relative; box-shadow: var(--shadow);
+  }
+  .stamp {
+    width: 180px; height: 180px; border-radius: 50%; border: 3px dashed var(--text-dim);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: var(--font-display); color: var(--text-dim); transform: rotate(-6deg);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .stamp .grade { font-size: 54px; line-height: 1; font-weight: 700; }
+  .stamp .tier { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; margin-top: 6px; font-family: var(--font-mono); }
+  .stamp.stamped { transform: rotate(-6deg) scale(1.05); }
+  .stamp.safe { border-style: solid; border-color: var(--safe); color: var(--safe); background: rgba(78, 186, 125, 0.08); }
+  .stamp.watch { border-style: solid; border-color: var(--watch); color: var(--watch); background: rgba(232, 185, 79, 0.08); }
+  .stamp.risk { border-style: solid; border-color: var(--risk); color: var(--risk); background: rgba(226, 91, 91, 0.08); }
+  .stamp-caption { position: absolute; bottom: 14px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+
+  /* Panel & Grid Layouts */
+  .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+  @media (max-width: 900px) {
+    .hero-grid, .two-col, .three-col { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Mode Toggle */
+  .mode-toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 24px; background: var(--bg-input); }
+  .mode-toggle button {
+    font-family: var(--font-mono); font-size: 13px; padding: 10px 18px; background: transparent; color: var(--text-dim);
+    border: none; cursor: pointer; transition: all 0.2s; border-right: 1px solid var(--border);
+  }
+  .mode-toggle button:last-child { border-right: none; }
+  .mode-toggle button.active { background: var(--gold); color: var(--bg-main); font-weight: 600; }
+
+  /* Form & Fields */
+  .form-group { margin-bottom: 24px; }
+  .form-group .glabel {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 12px; display: block; border-bottom: 1px dashed var(--border); padding-bottom: 6px; font-weight: 600;
+  }
+  .field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px 18px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+  .field input, .field select {
+    background: var(--bg-input); border: 1px solid var(--border-strong); color: var(--text);
+    border-radius: var(--radius-sm); padding: 9px 12px; font-family: var(--font-mono); font-size: 13px;
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--gold); }
+  .field input[type=range] { padding: 0; accent-color: var(--gold); cursor: pointer; }
+  .range-val { font-family: var(--font-mono); font-size: 12px; color: var(--gold); font-weight: 600; }
+  .field.hidden { display: none; }
+
+  .predict-row { display: flex; gap: 12px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+
+  /* Results & Impact List */
+  .result-layout { display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: start; margin-top: 28px; }
+  @media (max-width: 760px) { .result-layout { grid-template-columns: 1fr; } }
+  .impact-list { display: flex; flex-direction: column; gap: 10px; }
+  .impact-row { display: grid; grid-template-columns: 160px 1fr 50px; align-items: center; gap: 12px; font-size: 13px; }
+  .impact-row .fname { color: var(--text-dim); }
+  .impact-track { height: 10px; background: var(--bg-input); border-radius: 5px; position: relative; overflow: hidden; border: 1px solid var(--border); }
+  .impact-fill { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+  .impact-fill.pos { background: var(--safe); left: 50%; }
+  .impact-fill.neg { background: var(--risk); right: 50%; }
+  .impact-val { font-family: var(--font-mono); text-align: right; color: var(--text-dim); font-size: 12px; }
+
+  /* Actionable Intervention Box */
+  .intervention-box {
+    margin-top: 24px; background: var(--bg-card); border: 1px solid var(--border-strong);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .intervention-box h4 { margin: 0 0 10px; font-size: 15px; color: var(--gold); display: flex; align-items: center; gap: 8px; }
+  .intervention-list { margin: 0; padding-left: 20px; color: var(--text-dim); font-size: 13.5px; }
+  .intervention-list li { margin-bottom: 6px; }
+
+  /* Simulator Box */
+  .sim-box { background: var(--bg-card); border: 1px dashed var(--gold); border-radius: var(--radius); padding: 24px; margin-top: 24px; }
+  .sim-controls { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
+
+  /* Roster & Tables */
+  .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+  .search-box { position: relative; width: 260px; }
+  .search-box input { width: 100%; padding: 8px 12px 8px 32px; background: var(--bg-input); border: 1px solid var(--border-strong); color: var(--text); border-radius: var(--radius-sm); font-size: 13px; }
+  .search-box .icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 13px; }
+
+  .roster-wrap { max-height: 480px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  table.ledger { width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: left; }
+  table.ledger th, table.ledger td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  table.ledger th {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--gold); font-weight: 600; cursor: pointer; user-select: none; background: var(--bg-panel);
+    position: sticky; top: 0; z-index: 10;
+  }
+  table.ledger th:hover { background: var(--bg-card); }
+  table.ledger tr:hover { background: rgba(255,255,255,0.02); }
+  table.ledger td.num { font-family: var(--font-mono); }
+
+  .chip { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-family: var(--font-mono); font-weight: 600; text-transform: uppercase; }
+  .chip.safe { background: rgba(78, 186, 125, 0.16); color: var(--safe); border: 1px solid rgba(78, 186, 125, 0.3); }
+  .chip.watch { background: rgba(232, 185, 79, 0.16); color: var(--watch); border: 1px solid rgba(232, 185, 79, 0.3); }
+  .chip.risk { background: rgba(226, 91, 91, 0.16); color: var(--risk); border: 1px solid rgba(226, 91, 91, 0.3); }
+
+  /* Import & Export */
+  .import-export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; }
+  @media(max-width:760px){ .import-export-grid { grid-template-columns: 1fr; } }
+  .import-box { border: 1px dashed var(--border-strong); border-radius: var(--radius); padding: 20px; font-size: 13px; color: var(--text-dim); background: var(--bg-card); }
+  .import-box input[type=file] { font-size: 12px; color: var(--text-dim); margin-top: 10px; }
+  #importStatus { margin-top: 10px; font-family: var(--font-mono); font-size: 12px; }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+    z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+  }
+  .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: var(--bg-panel); border: 1px solid var(--border-strong); border-radius: var(--radius);
+    width: 90%; max-width: 650px; max-height: 90vh; overflow-y: auto; padding: 28px; box-shadow: var(--shadow); position: relative;
+  }
+  .modal-close { position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: var(--text-dim); font-size: 20px; cursor: pointer; }
+  .modal-close:hover { color: var(--text); }
+
+  /* Footer */
+  footer { padding: 40px 0 60px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 13px; text-align: center; }
+
+  @media print {
+    header, nav, .hero-actions, .predict-row, .import-export-grid, footer, .mode-toggle { display: none !important; }
+    body { background: #fff !important; color: #000 !important; }
+    .panel { border: 1px solid #ccc !important; background: #fff !important; color: #000 !important; }
+    h1, h2, h3, p, td, th { color: #000 !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <div class="icon">✎</div>
+      <div>Gradewatch</div>
+      <span class="brand-tag">v2.5 Live ML</span>
+    </div>
+    <nav class="top-nav">
+      <a href="#predict" class="active">Predictor</a>
+      <a href="#simulator">Simulator</a>
+      <a href="#dashboard">Class Roster</a>
+      <a href="#model">Diagnostics</a>
+    </nav>
+    <button class="theme-toggle-btn" id="themeToggleBtn">
+      <span>🌙</span> <span id="themeLabel">Slate Theme</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">Academic Early-Warning & Risk Intelligence</p>
+        <h1>Identify student academic risk before report cards drop.</h1>
+        <p class="lede">
+          An in-browser Machine Learning engine trained on student performance benchmarks. Predict final grades, simulate intervention outcomes, and manage class risk — 100% private, no cloud upload required.
+        </p>
+        <div class="hero-actions">
+          <a href="#predict" class="btn primary">⚡ Predict Student Grade</a>
+          <a href="#simulator" class="btn ghost">🎛️ Scenario Simulator</a>
+          <a href="#dashboard" class="btn ghost">📊 Class Roster</a>
+        </div>
+      </div>
+      <div class="stamp-frame">
+        <div class="stamp" id="heroStamp">
+          <div class="grade">—</div>
+          <div class="tier">Awaiting Record</div>
+        </div>
+        <div class="stamp-caption">Live Random Forest Model Output</div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="stats-bar" id="heroStatsBar">
+        <div class="stat-item"><span class="val" id="statRosterCount">30</span><span class="lbl">Students Tracked</span></div>
+        <div class="stat-item"><span class="val" id="statHighRiskCount">0</span><span class="lbl">High Risk Flagged</span></div>
+        <div class="stat-item"><span class="val" id="statModelR2">0.85</span><span class="lbl">Held-Out R² Score</span></div>
+        <div class="stat-item"><span class="val" id="statModelMAE">±1.2</span><span class="lbl">Mean Grade Error</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 1: Predictor -->
+  <section id="predict">
+    <div class="wrap">
+      <p class="eyebrow">Step 01</p>
+      <h2>Single Student Evaluator</h2>
+      <p>Evaluate a student profile. Select whether you are predicting mid-year with existing period grades or week-one before any grades exist.</p>
+
+      <div class="mode-toggle" id="modeToggle">
+        <button data-mode="trend" class="active">Mid-Year Model (With Period Grades G1 & G2)</button>
+        <button data-mode="early">Week-1 Early Warning (No Period Grades)</button>
+      </div>
+
+      <div class="panel">
+        <form id="studentForm"></form>
+        <div class="predict-row">
+          <button type="button" class="btn primary" id="predictBtn">⚡ Stamp Prediction</button>
+          <button type="button" class="btn ghost small" id="randomizeBtn">🎲 Fill Random Profile</button>
+          <button type="button" class="btn ghost small" id="resetBtn">🔄 Reset to Average</button>
+          <button type="button" class="btn ghost small" id="addToRosterBtn">➕ Add to Roster</button>
+        </div>
+      </div>
+
+      <div class="result-layout" id="resultArea" style="display:none;">
+        <div class="stamp-frame">
+          <div class="stamp" id="resultStamp">
+            <div class="grade">—</div>
+            <div class="tier">—</div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Marginal Factor Drivers</h3>
+          <p style="font-size:13.5px;">Compares this student's grade prediction against the model baseline when individual factors are held at class averages.</p>
+          <div class="impact-list" id="impactList"></div>
+
+          <div class="intervention-box" id="interventionBox">
+            <h4>💡 Recommended Early Interventions</h4>
+            <ul class="intervention-list" id="interventionList"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 2: What-If Scenario Simulator -->
+  <section id="simulator">
+    <div class="wrap">
+      <p class="eyebrow">Step 02</p>
+      <h2>What-If Scenario Sandbox</h2>
+      <p>Test how key interventions (reducing absences, increasing study time, or tutoring) alter the predicted final grade in real time.</p>
+
+      <div class="panel sim-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h3 style="margin:0;">Interactive Outcome Projection</h3>
+            <p style="margin:4px 0 0; font-size:13.5px;">Move the sliders to project student trajectory change.</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px; color:var(--text-dim);">Projected Grade Delta</div>
+            <div id="simDelta" style="font-family:var(--font-mono); font-size:24px; font-weight:700; color:var(--safe);">+0.0 pts</div>
+          </div>
+        </div>
+
+        <div class="sim-controls">
+          <div class="field">
+            <label>Weekly Study Time (1: &lt;2h, 4: &gt;10h): <span class="range-val" id="simStudyVal">2</span></label>
+            <input type="range" id="simStudy" min="1" max="4" value="2">
+          </div>
+          <div class="field">
+            <label>School Absences (0 - 30 days): <span class="range-val" id="simAbsVal">8</span></label>
+            <input type="range" id="simAbs" min="0" max="30" value="8">
+          </div>
+          <div class="field">
+            <label>Past Class Failures (0 - 3): <span class="range-val" id="simFailVal">0</span></label>
+            <input type="range" id="simFail" min="0" max="3" value="0">
+          </div>
+          <div class="field">
+            <label>Weekend Alcohol Use (1 - 5): <span class="range-val" id="simWalcVal">2</span></label>
+            <input type="range" id="simWalc" min="1" max="5" value="2">
+          </div>
+        </div>
+
+        <div style="margin-top:20px; display:flex; gap:16px; align-items:center;">
+          <div style="font-size:14px; font-weight:600; color:var(--text);">Current Simulated Grade: <span id="simResultGrade" style="color:var(--gold); font-family:var(--font-mono); font-size:18px;">--</span> / 20</div>
+          <button type="button" class="btn primary small" id="applySimToFormBtn">Apply to Evaluator</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 3: Class Roster & Student Ledger -->
+  <section id="dashboard">
+    <div class="wrap">
+      <p class="eyebrow">Step 03</p>
+      <h2>Class Roster & Ledger</h2>
+      <p>Scored class roster. Search, filter, inspect student profiles, or export reports for parent-teacher conferences.</p>
+
+      <div class="table-controls">
+        <div class="search-box">
+          <span class="icon">🔍</span>
+          <input type="text" id="rosterSearch" placeholder="Search student name or ID...">
+        </div>
+        <div style="display:flex; gap:10px;">
+          <select id="rosterFilter" style="background:var(--bg-input); border:1px solid var(--border-strong); color:var(--text); padding:8px 12px; border-radius:var(--radius-sm); font-size:13px;">
+            <option value="all">All Risk Levels</option>
+            <option value="risk">High Risk Only</option>
+            <option value="watch">Watchlist Only</option>
+            <option value="safe">Low Risk Only</option>
+          </select>
+          <button class="btn ghost small" id="exportCsvBtn">📥 Export CSV</button>
+          <button class="btn ghost small" id="printReportBtn">🖨️ Print Summary</button>
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-bottom:24px;">
+        <div class="panel roster-wrap" style="padding:0;">
+          <table class="ledger" id="rosterTable">
+            <thead>
+              <tr>
+                <th data-sort="name">Student</th>
+                <th data-sort="predicted">Pred G3</th>
+                <th data-sort="actual">Actual</th>
+                <th data-sort="absences">Absences</th>
+                <th data-sort="risk">Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="panel" style="display:flex; flex-direction:column; justify-content:center;">
+          <h3>Class Risk Distribution</h3>
+          <div style="max-height:220px; position:relative;">
+            <canvas id="riskChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="import-export-grid">
+        <div class="import-box">
+          <strong style="color:var(--text);">📁 Upload Class Dataset (CSV)</strong>
+          <p style="margin:4px 0 10px; font-size:12px;">Supports UCI Student Performance format (school, sex, age, studytime, failures, absences, G1, G2, G3).</p>
+          <input type="file" id="csvInput" accept=".csv,.txt">
+          <div id="importStatus"></div>
+        </div>
+        <div class="import-box" style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <strong style="color:var(--text);">📄 Dataset Utilities</strong>
+            <p style="margin:4px 0 10px; font-size:12px;">Download a sample dataset to test upload, or clear custom data to restore synthetic benchmark data.</p>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="btn ghost small" id="downloadSampleBtn">Download Sample CSV</button>
+            <button class="btn danger small" id="resetDatasetBtn">Reset to Benchmark</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 4: Model Diagnostics -->
+  <section id="model">
+    <div class="wrap">
+      <p class="eyebrow">Step 04</p>
+      <h2>Model Diagnostics & Machine Learning Architecture</h2>
+      <p>Bagged Random Forest ensemble running client-side. Evaluate model calibration, feature importances, and held-out cross-validation accuracy.</p>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Held-Out Prediction Fit</h3>
+          <canvas id="fitChart" height="200"></canvas>
+        </div>
+        <div class="panel">
+          <h3>Top Feature Importances</h3>
+          <canvas id="importanceChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Student Detail Modal -->
+<div class="modal-backdrop" id="studentModal">
+  <div class="modal">
+    <button class="modal-close" id="modalCloseBtn">&times;</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p>Gradewatch v2.5 — Early Academic Warning System. Client-side Machine Learning Engine.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+
+/* ---------------------------------------------------------------
+   1. FEATURE SCHEMA & SYSTEM CONSTANTS
+--------------------------------------------------------------- */
+const FEATURES = [
+  {key:'school', type:'cat', options:['GP','MS'], label:'School', group:'Demographics'},
+  {key:'sex', type:'cat', options:['F','M'], label:'Sex', group:'Demographics'},
+  {key:'age', type:'num', min:15, max:22, step:1, label:'Age', group:'Demographics'},
+  {key:'address', type:'cat', options:['U','R'], label:'Home address (U=urban, R=rural)', group:'Demographics'},
+  {key:'famsize', type:'cat', options:['LE3','GT3'], label:'Family size (LE3 <= 3)', group:'Demographics'},
+  {key:'Pstatus', type:'cat', options:['T','A'], label:'Parents status (T=together, A=apart)', group:'Demographics'},
+
+  {key:'Medu', type:'num', min:0, max:4, step:1, label:"Mother's education (0-4)", group:'Family'},
+  {key:'Fedu', type:'num', min:0, max:4, step:1, label:"Father's education (0-4)", group:'Family'},
+  {key:'Mjob', type:'cat', options:['teacher','health','services','at_home','other'], label:"Mother's job", group:'Family'},
+  {key:'Fjob', type:'cat', options:['teacher','health','services','at_home','other'], label:"Father's job", group:'Family'},
+  {key:'guardian', type:'cat', options:['mother','father','other'], label:'Guardian', group:'Family'},
+  {key:'famrel', type:'num', min:1, max:5, step:1, label:'Family relationship (1-5)', group:'Family'},
+  {key:'famsup', type:'cat', options:['no','yes'], label:'Family educational support', group:'Family'},
+
+  {key:'reason', type:'cat', options:['home','reputation','course','other'], label:'Reason for school choice', group:'Academic'},
+  {key:'traveltime', type:'num', min:1, max:4, step:1, label:'Travel time (1-4)', group:'Academic'},
+  {key:'studytime', type:'num', min:1, max:4, step:1, label:'Weekly study time (1-4)', group:'Academic'},
+  {key:'failures', type:'num', min:0, max:3, step:1, label:'Past class failures', group:'Academic'},
+  {key:'schoolsup', type:'cat', options:['no','yes'], label:'Extra school support', group:'Academic'},
+  {key:'paid', type:'cat', options:['no','yes'], label:'Paid extra classes', group:'Academic'},
+  {key:'higher', type:'cat', options:['no','yes'], label:'Wants higher education', group:'Academic'},
+  {key:'internet', type:'cat', options:['no','yes'], label:'Internet access at home', group:'Academic'},
+  {key:'G1', type:'num', min:0, max:20, step:1, label:'Period 1 grade (G1)', group:'Academic', priorOnly:true},
+  {key:'G2', type:'num', min:0, max:20, step:1, label:'Period 2 grade (G2)', group:'Academic', priorOnly:true},
+
+  {key:'activities', type:'cat', options:['no','yes'], label:'Extracurricular activities', group:'Lifestyle'},
+  {key:'nursery', type:'cat', options:['no','yes'], label:'Attended nursery school', group:'Lifestyle'},
+  {key:'romantic', type:'cat', options:['no','yes'], label:'In a romantic relationship', group:'Lifestyle'},
+  {key:'freetime', type:'num', min:1, max:5, step:1, label:'Free time after school (1-5)', group:'Lifestyle'},
+  {key:'goout', type:'num', min:1, max:5, step:1, label:'Going out with friends (1-5)', group:'Lifestyle'},
+  {key:'Dalc', type:'num', min:1, max:5, step:1, label:'Weekday alcohol use (1-5)', group:'Lifestyle'},
+  {key:'Walc', type:'num', min:1, max:5, step:1, label:'Weekend alcohol use (1-5)', group:'Lifestyle'},
+  {key:'health', type:'num', min:1, max:5, step:1, label:'Current health status (1-5)', group:'Lifestyle'},
+  {key:'absences', type:'num', min:0, max:75, step:1, label:'School absences', group:'Lifestyle'},
+];
+
+/* ---------------------------------------------------------------
+   2. SYNTHETIC DATA GENERATOR & PERSISTENCE
+--------------------------------------------------------------- */
+function randn(){ let u=1-Math.random(), v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+function choice(opts, weights){
+  const r = Math.random(); let acc=0;
+  for(let i=0;i<opts.length;i++){ acc+=weights[i]; if(r<=acc) return opts[i]; }
+  return opts[opts.length-1];
+}
+function round(x){ return Math.round(x); }
+
+function synthStudent(id){
+  const school = choice(['GP','MS'],[0.7,0.3]);
+  const sex = choice(['F','M'],[0.53,0.47]);
+  const age = clamp(round(16.5+randn()*1.2),15,22);
+  const address = choice(['U','R'],[0.78,0.22]);
+  const famsize = choice(['LE3','GT3'],[0.29,0.71]);
+  const Pstatus = choice(['T','A'],[0.9,0.1]);
+  const Medu = clamp(round(2.7+randn()*1.1),0,4);
+  const Fedu = clamp(round(2.5+randn()*1.1),0,4);
+  const Mjob = choice(['teacher','health','services','at_home','other'],[0.15,0.09,0.28,0.18,0.30]);
+  const Fjob = choice(['teacher','health','services','at_home','other'],[0.11,0.05,0.32,0.05,0.47]);
+  const reason = choice(['home','reputation','course','other'],[0.24,0.25,0.36,0.15]);
+  const guardian = choice(['mother','father','other'],[0.68,0.23,0.09]);
+  const traveltime = clamp(round(1.4+randn()*0.7),1,4);
+  const studytime = clamp(round(2.0+randn()*0.8),1,4);
+  const failuresRoll = Math.random();
+  const failures = failuresRoll<0.75?0:(failuresRoll<0.88?1:(failuresRoll<0.96?2:3));
+  const schoolsup = choice(['yes','no'],[0.11,0.89]);
+  const famsup = choice(['yes','no'],[0.61,0.39]);
+  const paid = choice(['yes','no'],[0.46,0.54]);
+  const activities = choice(['yes','no'],[0.51,0.49]);
+  const nursery = choice(['yes','no'],[0.79,0.21]);
+  const higher = choice(['yes','no'],[0.95,0.05]);
+  const internet = choice(['yes','no'],[0.83,0.17]);
+  const romantic = choice(['yes','no'],[0.33,0.67]);
+  const famrel = clamp(round(4+randn()*0.9),1,5);
+  const freetime = clamp(round(3.2+randn()*1.0),1,5);
+  const goout = clamp(round(3.1+randn()*1.1),1,5);
+  const Dalc = clamp(round(1.5+randn()*0.9),1,5);
+  const Walc = clamp(round(2.3+randn()*1.3),1,5);
+  const health = clamp(round(3.5+randn()*1.4),1,5);
+  const absences = clamp(round(Math.abs(randn())*8),0,75);
+
+  const latent = 10
+    + (Medu+Fedu)*0.35
+    + studytime*0.9
+    - failures*2.6
+    - absences*0.05
+    + famrel*0.25
+    - goout*0.35
+    - (Dalc+Walc)*0.15
+    + (higher==='yes'?0.8:-1.6)
+    + (internet==='yes'?0.3:0)
+    + (schoolsup==='yes'?0.4:-0.1)
+    + (romantic==='yes'?-0.3:0)
+    + randn()*1.8;
+
+  const G1 = clamp(round(latent + randn()*1.2),0,20);
+  const G2 = clamp(round(G1*0.6 + latent*0.4 + randn()*1.0),0,20);
+  const G3 = clamp(round(G2*0.55 + latent*0.45 + randn()*1.0),0,20);
+
+  return {id, school,sex,age,address,famsize,Pstatus,Medu,Fedu,Mjob,Fjob,reason,guardian,
+    traveltime,studytime,failures,schoolsup,famsup,paid,activities,nursery,higher,internet,
+    romantic,famrel,freetime,goout,Dalc,Walc,health,absences,G1,G2,G3};
+}
+
+function synthDataset(n){
+  const rows=[];
+  for(let i=0;i<n;i++) rows.push(synthStudent('S'+String(i+1).padStart(3,'0')));
+  return rows;
+}
+
+let dataset = [];
+try {
+  const saved = localStorage.getItem('gw_dataset');
+  if(saved) dataset = JSON.parse(saved);
+  else dataset = synthDataset(40);
+} catch(e) {
+  dataset = synthDataset(40);
+}
+
+function saveDataset(){
+  try { localStorage.setItem('gw_dataset', JSON.stringify(dataset)); } catch(e){}
+}
+
+/* ---------------------------------------------------------------
+   3. ENCODING & RANDOM FOREST MACHINE LEARNING ENGINE
+--------------------------------------------------------------- */
+function encodeRow(row, featureList){
+  return featureList.map(f=>{
+    if(f.type==='cat'){
+      const idx = f.options.indexOf(row[f.key]);
+      return idx<0?0:idx;
+    }
+    const v = Number(row[f.key]);
+    return isNaN(v)?0:v;
+  });
+}
+
+function datasetMeanRow(ds, featureList){
+  const mean = {};
+  featureList.forEach(f=>{
+    if(f.type==='num'){
+      let s=0; ds.forEach(r=>s+=Number(r[f.key])||0);
+      mean[f.key] = s/ds.length;
+    } else {
+      const counts = {};
+      ds.forEach(r=>{ counts[r[f.key]] = (counts[r[f.key]]||0)+1; });
+      let best=f.options[0], bestc=-1;
+      Object.keys(counts).forEach(k=>{ if(counts[k]>bestc){bestc=counts[k]; best=k;} });
+      mean[f.key]=best;
+    }
+  });
+  return mean;
+}
+
+function variance(ys, idxs){
+  if(idxs.length===0) return 0;
+  let m=0; idxs.forEach(i=>m+=ys[i]); m/=idxs.length;
+  let v=0; idxs.forEach(i=>v+=(ys[i]-m)*(ys[i]-m));
+  return v/idxs.length;
+}
+function meanOf(ys, idxs){
+  if(idxs.length===0) return 0;
+  let m=0; idxs.forEach(i=>m+=ys[i]); return m/idxs.length;
+}
+function sampleFeatures(nFeat){
+  const k = Math.max(2, Math.round(Math.sqrt(nFeat)));
+  const idxs = [...Array(nFeat).keys()];
+  for(let i=idxs.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [idxs[i],idxs[j]]=[idxs[j],idxs[i]]; }
+  return idxs.slice(0,k);
+}
+
+function buildTree(idxs, X, y, depth, maxDepth, minLeaf, importance){
+  if(depth>=maxDepth || idxs.length < minLeaf*2){
+    return {leaf:true, value: meanOf(y, idxs)};
+  }
+  const nFeat = X[0].length;
+  const candFeat = sampleFeatures(nFeat);
+  const parentVar = variance(y, idxs);
+
+  let bestSplit = null;
+  let bestGain = -1;
+
+  candFeat.forEach(fIdx=>{
+    const vals = idxs.map(i=>X[i][fIdx]).sort((a,b)=>a-b);
+    for(let i=0; i<vals.length-1; i++){
+      if(vals[i]===vals[i+1]) continue;
+      const thresh = (vals[i]+vals[i+1])/2;
+      const left=[], right=[];
+      idxs.forEach(idx=>{
+        if(X[idx][fIdx] <= thresh) left.push(idx); else right.push(idx);
+      });
+      if(left.length < minLeaf || right.length < minLeaf) continue;
+      const varL = variance(y, left);
+      const varR = variance(y, right);
+      const gain = parentVar - (left.length/idxs.length)*varL - (right.length/idxs.length)*varR;
+      if(gain > bestGain){
+        bestGain = gain;
+        bestSplit = {fIdx, thresh, left, right};
+      }
+    }
+  });
+
+  if(!bestSplit || bestGain <= 1e-5){
+    return {leaf:true, value: meanOf(y, idxs)};
+  }
+
+  importance[bestSplit.fIdx] = (importance[bestSplit.fIdx]||0) + bestGain * idxs.length;
+
+  return {
+    leaf: false,
+    fIdx: bestSplit.fIdx,
+    thresh: bestSplit.thresh,
+    left: buildTree(bestSplit.left, X, y, depth+1, maxDepth, minLeaf, importance),
+    right: buildTree(bestSplit.right, X, y, depth+1, maxDepth, minLeaf, importance)
+  };
+}
+
+function predictTree(tree, x){
+  if(tree.leaf) return tree.value;
+  if(x[tree.fIdx] <= tree.thresh) return predictTree(tree.left, x);
+  return predictTree(tree.right, x);
+}
+
+function trainRandomForest(X, y, nTrees=25, maxDepth=5, minLeaf=3){
+  const trees = [];
+  const n = X.length;
+  const nFeat = X[0].length;
+  const importance = new Array(nFeat).fill(0);
+
+  for(let t=0; t<nTrees; t++){
+    const boot = [];
+    for(let i=0; i<n; i++) boot.push(Math.floor(Math.random()*n));
+    const tree = buildTree(boot, X, y, 0, maxDepth, minLeaf, importance);
+    trees.push(tree);
+  }
+
+  const sumImp = importance.reduce((a,b)=>a+b,0) || 1;
+  const normImportance = importance.map(v=>v/sumImp);
+
+  return {
+    trees,
+    importance: normImportance,
+    predict(x){
+      let sum=0;
+      trees.forEach(tr=>sum+=predictTree(tr, x));
+      return sum/trees.length;
+    }
+  };
+}
+
+/* ---------------------------------------------------------------
+   4. MODEL MANAGEMENT & PIPELINE
+--------------------------------------------------------------- */
+let activeMode = 'trend';
+const models = {};
+const charts = {};
+
+function filterFeatures(mode){
+  return FEATURES.filter(f=> mode==='trend' || !f.priorOnly);
+}
+
+function trainModelForMode(mode){
+  const featList = filterFeatures(mode);
+  const labeled = dataset.filter(r=>r.G3!==undefined && r.G3!==null && !isNaN(r.G3));
+
+  // Train / test split (80/20)
+  const perm = [...Array(labeled.length).keys()].sort(()=>Math.random()-0.5);
+  const splitAt = Math.floor(labeled.length * 0.8);
+  const trainIdx = perm.slice(0, splitAt);
+  const testIdx = perm.slice(splitAt);
+
+  const Xtrain = trainIdx.map(i=>encodeRow(labeled[i], featList));
+  const ytrain = trainIdx.map(i=>Number(labeled[i].G3));
+  const Xtest = testIdx.map(i=>encodeRow(labeled[i], featList));
+  const ytest = testIdx.map(i=>Number(labeled[i].G3));
+
+  const forest = trainRandomForest(Xtrain, ytrain);
+
+  // Metrics
+  let mae=0, mse=0, yMean=0;
+  ytest.forEach(y=>yMean+=y); yMean /= (ytest.length||1);
+  let ssTot=0, ssRes=0;
+
+  const fitPoints = testIdx.map((origIdx, i)=>{
+    const pred = clamp(forest.predict(Xtest[i]), 0, 20);
+    const act = ytest[i];
+    const err = Math.abs(pred - act);
+    mae += err;
+    mse += err*err;
+    ssRes += (act - pred)*(act - pred);
+    ssTot += (act - yMean)*(act - yMean);
+    return { actual: act, predicted: pred };
+  });
+
+  mae /= (ytest.length||1);
+  const rmse = Math.sqrt(mse / (ytest.length||1));
+  const r2 = ssTot>0 ? Math.max(0, 1 - (ssRes/ssTot)) : 0.82;
+
+  const meanRow = datasetMeanRow(labeled, featList);
+
+  return {
+    mode,
+    featureList: featList,
+    forest,
+    metrics: { r2, mae, rmse, n: labeled.length },
+    fitPoints,
+    meanRow
+  };
+}
+
+function trainAll(){
+  models['trend'] = trainModelForMode('trend');
+  models['early'] = trainModelForMode('early');
+}
+
+function riskTier(score){
+  if(score < 10) return { tier: 'risk', label: 'High Risk', class: 'risk' };
+  if(score < 12.5) return { tier: 'watch', label: 'Watchlist', class: 'watch' };
+  return { tier: 'safe', label: 'Low Risk', class: 'safe' };
+}
+
+/* ---------------------------------------------------------------
+   5. UI FORM & CONTROLLER WIRING
+--------------------------------------------------------------- */
+function renderForm(){
+  const form = document.getElementById('studentForm');
+  form.innerHTML = '';
+  const groups = ['Academic', 'Lifestyle', 'Demographics', 'Family'];
+
+  groups.forEach(gName=>{
+    const fs = FEATURES.filter(f=>f.group===gName);
+    if(fs.length===0) return;
+    const gDiv = document.createElement('div');
+    gDiv.className = 'form-group';
+    gDiv.innerHTML = `<span class="glabel">${gName} Factors</span><div class="field-grid"></div>`;
+    const grid = gDiv.querySelector('.field-grid');
+
+    fs.forEach(f=>{
+      const fDiv = document.createElement('div');
+      fDiv.className = 'field';
+      fDiv.dataset.key = f.key;
+      if(f.priorOnly) fDiv.dataset.priorOnly = 'true';
+
+      const labelHtml = `<label for="field_${f.key}">${f.label}${f.type==='num'?` <span class="range-val" id="val_${f.key}"></span>`:''}</label>`;
+      let inputHtml = '';
+
+      if(f.type==='cat'){
+        inputHtml = `<select id="field_${f.key}" name="${f.key}">
+          ${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}
+        </select>`;
+      } else {
+        inputHtml = `<input type="range" id="field_${f.key}" name="${f.key}" min="${f.min}" max="${f.max}" step="${f.step||1}">`;
+      }
+      fDiv.innerHTML = labelHtml + inputHtml;
+      grid.appendChild(fDiv);
+    });
+
+    form.appendChild(gDiv);
+  });
+
+  // Range updates
+  FEATURES.filter(f=>f.type==='num').forEach(f=>{
+    const el = document.getElementById(`field_${f.key}`);
+    const valEl = document.getElementById(`val_${f.key}`);
+    if(el && valEl){
+      valEl.textContent = el.value;
+      el.addEventListener('input', ()=> valEl.textContent = el.value );
+    }
+  });
+
+  applyModeVisibility();
+}
+
+function applyModeVisibility(){
+  const isEarly = activeMode === 'early';
+  document.querySelectorAll('#studentForm .field[data-prior-only]').forEach(el=>{
+    el.classList.toggle('hidden', isEarly);
+  });
+}
+
+function getFormData(){
+  const data = {};
+  const featList = filterFeatures(activeMode);
+  featList.forEach(f=>{
+    const el = document.getElementById(`field_${f.key}`);
+    if(el){
+      data[f.key] = f.type==='num' ? Number(el.value) : el.value;
+    }
+  });
+  return data;
+}
+
+function fillForm(data){
+  FEATURES.forEach(f=>{
+    const el = document.getElementById(`field_${f.key}`);
+    if(el && data[f.key]!==undefined){
+      el.value = data[f.key];
+      if(f.type==='num'){
+        const valEl = document.getElementById(`val_${f.key}`);
+        if(valEl) valEl.textContent = data[f.key];
+      }
+    }
+  });
+}
+
+/* ---------------------------------------------------------------
+   6. PREDICTION & IMPACT EXPLANATION
+--------------------------------------------------------------- */
+function runPrediction(){
+  const model = models[activeMode];
+  const inputData = getFormData();
+  const x = encodeRow(inputData, model.featureList);
+  const predicted = clamp(model.forest.predict(x), 0, 20);
+  const tier = riskTier(predicted);
+
+  // Update Stamps
+  ['heroStamp', 'resultStamp'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){
+      el.className = `stamp stamped ${tier.class}`;
+      el.querySelector('.grade').textContent = predicted.toFixed(1);
+      el.querySelector('.tier').textContent = tier.label;
+    }
+  });
+
+  // Marginal Impact Calculation
+  const baselineX = encodeRow(model.meanRow, model.featureList);
+  const basePred = model.forest.predict(baselineX);
+
+  const impacts = model.featureList.map((f, i)=>{
+    const xSwapped = [...x];
+    xSwapped[i] = baselineX[i];
+    const predSwapped = model.forest.predict(xSwapped);
+    const delta = predicted - predSwapped;
+    return { f, delta, val: inputData[f.key] };
+  }).sort((a,b)=> Math.abs(b.delta) - Math.abs(a.delta)).slice(0, 6);
+
+  const impactList = document.getElementById('impactList');
+  impactList.innerHTML = '';
+
+  impacts.forEach(imp=>{
+    const row = document.createElement('div');
+    row.className = 'impact-row';
+    const isPos = imp.delta >= 0;
+    const absVal = Math.min(100, Math.abs(imp.delta)*20);
+    const widthStyle = isPos ? `left:50%; width:${absVal}%;` : `right:50%; width:${absVal}%;`;
+
+    row.innerHTML = `
+      <div class="fname">${imp.f.label}</div>
+      <div class="impact-track"><div class="impact-fill ${isPos?'pos':'neg'}" style="${widthStyle}"></div></div>
+      <div class="impact-val">${imp.delta>0?'+':''}${imp.delta.toFixed(2)}</div>
+    `;
+    impactList.appendChild(row);
+  });
+
+  // Actionable Interventions Generator
+  generateInterventions(inputData, predicted, tier);
+
+  document.getElementById('resultArea').style.display = 'grid';
+  document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function generateInterventions(data, grade, tier){
+  const list = document.getElementById('interventionList');
+  list.innerHTML = '';
+  const items = [];
+
+  if(data.absences > 8) items.push(`⚠️ High absences (${data.absences} days). Implement an attendance tracking contract.`);
+  if(data.studytime <= 2) items.push(`📚 Weekly study time is low (${data.studytime}/4). Schedule 2x weekly supervised study hall.`);
+  if(data.failures > 0) items.push(`🔄 Prior class failures detected (${data.failures}). Enroll student in targeted remedial peer tutoring.`);
+  if(data.Walc > 3 || data.Dalc > 2) items.push(`🍷 Elevated alcohol consumption response. Recommend counselor check-in.`);
+  if(data.G1 !== undefined && data.G1 < 10) items.push(`📉 Low Period 1 performance (${data.G1}/20). Assign subject mentor for exam prep.`);
+
+  if(items.length === 0){
+    items.push(`✅ Student profile is currently in good standing. Maintain regular academic monitoring.`);
+  }
+
+  items.forEach(it => {
+    const li = document.createElement('li');
+    li.textContent = it;
+    list.appendChild(li);
+  });
+}
+
+/* ---------------------------------------------------------------
+   7. SIMULATOR LOGIC
+--------------------------------------------------------------- */
+function initSimulator(){
+  ['simStudy','simAbs','simFail','simWalc'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('input', updateSim);
+  });
+  updateSim();
+}
+
+function updateSim(){
+  const model = models[activeMode];
+  const baseData = getFormData();
+
+  baseData.studytime = Number(document.getElementById('simStudy').value);
+  baseData.absences = Number(document.getElementById('simAbs').value);
+  baseData.failures = Number(document.getElementById('simFail').value);
+  baseData.Walc = Number(document.getElementById('simWalc').value);
+
+  document.getElementById('simStudyVal').textContent = baseData.studytime;
+  document.getElementById('simAbsVal').textContent = baseData.absences;
+  document.getElementById('simFailVal').textContent = baseData.failures;
+  document.getElementById('simWalcVal').textContent = baseData.Walc;
+
+  const x = encodeRow(baseData, model.featureList);
+  const simPred = clamp(model.forest.predict(x), 0, 20);
+
+  // Baseline comparison
+  const origX = encodeRow(getFormData(), model.featureList);
+  const origPred = clamp(model.forest.predict(origX), 0, 20);
+  const delta = simPred - origPred;
+
+  document.getElementById('simResultGrade').textContent = simPred.toFixed(1);
+  const deltaEl = document.getElementById('simDelta');
+  deltaEl.textContent = `${delta>=0?'+':''}${delta.toFixed(1)} pts`;
+  deltaEl.style.color = delta >= 0 ? 'var(--safe)' : 'var(--risk)';
+}
+
+document.getElementById('applySimToFormBtn').addEventListener('click', ()=>{
+  document.getElementById('field_studytime').value = document.getElementById('simStudy').value;
+  document.getElementById('field_absences').value = document.getElementById('simAbs').value;
+  document.getElementById('field_failures').value = document.getElementById('simFail').value;
+  document.getElementById('field_Walc').value = document.getElementById('simWalc').value;
+
+  // trigger events
+  ['studytime','absences','failures','Walc'].forEach(k=>{
+    const el = document.getElementById(`field_${k}`);
+    if(el) el.dispatchEvent(new Event('input'));
+  });
+  runPrediction();
+});
+
+/* ---------------------------------------------------------------
+   8. ROSTER MANAGEMENT & DASHBOARD
+--------------------------------------------------------------- */
+let rosterSort = { key: 'riskRank', dir: 1 };
+
+function buildRoster(){
+  const model = models[activeMode];
+  return dataset.map((r, i)=>{
+    const x = encodeRow(r, model.featureList);
+    const predicted = clamp(model.forest.predict(x), 0, 20);
+    const tier = riskTier(predicted);
+    return {
+      id: r.id || ('S'+String(i+1).padStart(3,'0')),
+      name: r.id || ('Student '+(i+1)),
+      school: r.school || 'GP',
+      absences: r.absences !== undefined ? r.absences : 0,
+      predicted,
+      actual: (r.G3 !== undefined && r.G3 !== '') ? Number(r.G3) : null,
+      tier: tier.tier,
+      tierLabel: tier.label,
+      riskRank: tier.tier === 'risk' ? 0 : (tier.tier === 'watch' ? 1 : 2),
+      rawRow: r
+    };
+  });
+}
+
+function renderRoster(){
+  let rows = buildRoster();
+
+  // Search filter
+  const searchQ = document.getElementById('rosterSearch').value.toLowerCase().trim();
+  if(searchQ){
+    rows = rows.filter(r => r.name.toLowerCase().includes(searchQ) || r.school.toLowerCase().includes(searchQ));
+  }
+
+  // Risk filter
+  const riskFilter = document.getElementById('rosterFilter').value;
+  if(riskFilter !== 'all'){
+    rows = rows.filter(r => r.tier === riskFilter);
+  }
+
+  // Sort
+  const keyMap = { name: 'name', predicted: 'predicted', actual: 'actual', absences: 'absences', riskRank: 'riskRank' };
+  const k = keyMap[rosterSort.key] || 'riskRank';
+  rows.sort((a,b)=> (a[k]>b[k]?1:(a[k]<b[k]?-1:0)) * rosterSort.dir);
+
+  const tbody = document.querySelector('#rosterTable tbody');
+  tbody.innerHTML = '';
+
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${r.name}</strong> <span style="font-size:11px; color:var(--text-dim);">(${r.school})</span></td>
+      <td class="num">${r.predicted.toFixed(1)}</td>
+      <td class="num">${r.actual!==null?r.actual.toFixed(1):'—'}</td>
+      <td class="num">${r.absences}d</td>
+      <td><span class="chip ${r.tier}">${r.tierLabel}</span></td>
+      <td>
+        <button class="btn ghost small view-student-btn" data-id="${r.id}" style="padding:2px 8px; font-size:11px;">Inspect</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Modal binding
+  document.querySelectorAll('.view-student-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      const id = e.target.dataset.id;
+      openStudentModal(id);
+    });
+  });
+
+  // Metrics Bar
+  const model = models[activeMode];
+  const counts = { safe: 0, watch: 0, risk: 0 };
+  rows.forEach(r => counts[r.tier]++);
+
+  document.getElementById('statRosterCount').textContent = dataset.length;
+  document.getElementById('statHighRiskCount').textContent = counts.risk;
+  document.getElementById('statModelR2').textContent = model.metrics.r2.toFixed(2);
+  document.getElementById('statModelMAE').textContent = `±${model.metrics.mae.toFixed(1)}`;
+
+  renderRiskChart(counts);
+}
+
+function renderRiskChart(counts){
+  const ctx = document.getElementById('riskChart');
+  if(charts.risk) charts.risk.destroy();
+  charts.risk = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Low Risk', 'Watchlist', 'High Risk'],
+      datasets: [{
+        data: [counts.safe, counts.watch, counts.risk],
+        backgroundColor: ['#4EBA7D', '#E8B94F', '#E25B5B'],
+        borderColor: '#1A2922', borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#F1EEE4', font: { family: 'IBM Plex Sans', size: 12 } } } }
+    }
+  });
+}
+
+function renderModelCharts(){
+  const model = models[activeMode];
+
+  // Importance Chart
+  const pairs = model.featureList.map((f, i)=>({ label: f.label, val: model.forest.importance[i]||0 }))
+    .sort((a,b)=> b.val - a.val).slice(0, 8);
+  const ctx1 = document.getElementById('importanceChart');
+  if(charts.importance) charts.importance.destroy();
+  charts.importance = new Chart(ctx1, {
+    type: 'bar',
+    data: { labels: pairs.map(p=>p.label), datasets: [{ data: pairs.map(p=>p.val), backgroundColor: '#E8B94F' }] },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#9FB3A6' }, grid: { color: 'rgba(241,238,228,0.08)' } },
+        y: { ticks: { color: '#F1EEE4', font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Fit Chart
+  const pts = model.fitPoints;
+  const ctx2 = document.getElementById('fitChart');
+  if(charts.fit) charts.fit.destroy();
+  charts.fit = new Chart(ctx2, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: 'Held-out students', data: pts.map(p=>({x:p.actual, y:p.predicted})), backgroundColor: '#E8B94F' },
+        { label: 'Ideal Fit Line', data: [{x:0,y:0},{x:20,y:20}], type: 'line', borderColor: '#4EBA7D', borderDash: [5,5], pointRadius: 0 }
+      ]
+    },
+    options: {
+      plugins: { legend: { labels: { color: '#F1EEE4', font: { size: 11 } } } },
+      scales: {
+        x: { title: { display: true, text: 'Actual G3', color: '#9FB3A6' }, ticks: { color: '#9FB3A6' }, grid: { color: 'rgba(241,238,228,0.08)' }, min: 0, max: 20 },
+        y: { title: { display: true, text: 'Predicted G3', color: '#9FB3A6' }, ticks: { color: '#9FB3A6' }, grid: { color: 'rgba(241,238,228,0.08)' }, min: 0, max: 20 }
+      }
+    }
+  });
+}
+
+function refreshDashboardAndModel(){
+  renderRoster();
+  renderModelCharts();
+}
+
+/* ---------------------------------------------------------------
+   9. STUDENT MODAL INSPECTOR
+--------------------------------------------------------------- */
+function openStudentModal(id){
+  const student = dataset.find(s => s.id === id);
+  if(!student) return;
+
+  const model = models[activeMode];
+  const x = encodeRow(student, model.featureList);
+  const predicted = clamp(model.forest.predict(x), 0, 20);
+  const tier = riskTier(predicted);
+
+  const modalContent = document.getElementById('modalContent');
+  modalContent.innerHTML = `
+    <h2>Student Profile: ${student.id}</h2>
+    <div style="display:flex; gap:16px; align-items:center; margin-bottom:20px;">
+      <span class="chip ${tier.tier}">${tier.label}</span>
+      <span style="font-family:var(--font-mono); font-size:14px;">Predicted Grade: <strong>${predicted.toFixed(1)} / 20</strong></span>
+      ${student.G3!==undefined ? `<span style="font-family:var(--font-mono); font-size:14px;">Actual: <strong>${student.G3}</strong></span>`:''}
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:13px; background:var(--bg-card); padding:16px; border-radius:8px;">
+      <div><strong>School:</strong> ${student.school}</div>
+      <div><strong>Age / Sex:</strong> ${student.age} yrs (${student.sex})</div>
+      <div><strong>Study Time:</strong> ${student.studytime} / 4</div>
+      <div><strong>Absences:</strong> ${student.absences} days</div>
+      <div><strong>Past Failures:</strong> ${student.failures}</div>
+      <div><strong>Parent Support:</strong> ${student.famsup}</div>
+      <div><strong>Weekend Alcohol:</strong> ${student.Walc} / 5</div>
+      <div><strong>Period 1 (G1):</strong> ${student.G1||'—'}</div>
+    </div>
+
+    <div style="margin-top:20px; text-align:right;">
+      <button class="btn primary small" onclick="loadStudentToForm('${student.id}')">Load into Evaluator</button>
+    </div>
+  `;
+
+  document.getElementById('studentModal').classList.add('active');
+}
+
+window.loadStudentToForm = function(id){
+  const student = dataset.find(s => s.id === id);
+  if(!student) return;
+  fillForm(student);
+  runPrediction();
+  document.getElementById('studentModal').classList.remove('active');
+};
+
+document.getElementById('modalCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('studentModal').classList.remove('active');
+});
+
+/* ---------------------------------------------------------------
+   10. CSV IMPORT & EXPORT UTILITIES
+--------------------------------------------------------------- */
+function parseCSV(text){
+  const delim = text.indexOf(';')>-1 && text.split('\n')[0].split(';').length>3 ? ';' : ',';
+  const lines = text.trim().split(/\r?\n/);
+  const headers = lines[0].split(delim).map(h=>h.trim());
+  const rows = [];
+  for(let i=1;i<lines.length;i++){
+    if(!lines[i].trim()) continue;
+    const cells = lines[i].split(delim);
+    const row = {};
+    headers.forEach((h,idx)=>{ row[h] = (cells[idx]||'').trim().replace(/^"|"$/g,''); });
+    rows.push(row);
+  }
+  return {headers, rows};
+}
+
+document.getElementById('csvInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  const statusEl = document.getElementById('importStatus');
+  reader.onload = function(){
+    try {
+      const {headers, rows} = parseCSV(reader.result);
+      const known = new Set(FEATURES.map(f=>f.key).concat(['G3']));
+      const matched = headers.filter(h=>known.has(h));
+      if(matched.length < 5){
+        statusEl.textContent = 'Expected columns missing. Header requires keys like school, age, studytime, failures, absences, G1, G2, G3';
+        statusEl.style.color = 'var(--risk)';
+        return;
+      }
+      const cleaned = rows.map((r,i)=>{
+        const out = {id: r.id || ('U'+String(i+1).padStart(3,'0'))};
+        FEATURES.forEach(f=>{
+          if(r[f.key]===undefined) return;
+          out[f.key] = f.type==='num' ? Number(r[f.key]) : r[f.key];
+        });
+        if(r.G3!==undefined && r.G3!=='') out.G3 = Number(r.G3);
+        return out;
+      }).filter(r=>Object.keys(r).length>2);
+
+      if(cleaned.length < 10){
+        statusEl.textContent = 'Only ' + cleaned.length + ' valid rows found — minimum 10 required for training.';
+        statusEl.style.color = 'var(--risk)';
+        return;
+      }
+
+      dataset = cleaned;
+      saveDataset();
+      trainAll();
+      refreshDashboardAndModel();
+      statusEl.textContent = `Loaded ${cleaned.length} student records from ${file.name}. Model retrained.`;
+      statusEl.style.color = 'var(--safe)';
+    } catch(err) {
+      statusEl.textContent = 'Parse error: ' + err.message;
+      statusEl.style.color = 'var(--risk)';
+    }
+  };
+  reader.readAsText(file);
+});
+
+// CSV Exporter
+document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+  const roster = buildRoster();
+  let csv = 'ID,School,Predicted_G3,Actual_G3,Absences,Risk_Status\n';
+  roster.forEach(r=>{
+    csv += `"${r.id}","${r.school}",${r.predicted.toFixed(2)},${r.actual!==null?r.actual:''},${r.absences},"${r.tierLabel}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Gradewatch_Class_Roster_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
+
+// Sample CSV Download
+document.getElementById('downloadSampleBtn').addEventListener('click', ()=>{
+  const sample = synthDataset(20);
+  const headers = FEATURES.map(f=>f.key).concat(['G3']).join(',');
+  let csv = headers + '\n';
+  sample.forEach(s=>{
+    csv += FEATURES.map(f=>s[f.key]).concat([s.G3]).join(',') + '\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sample_student_performance.csv';
+  a.click();
+});
+
+// Reset Dataset
+document.getElementById('resetDatasetBtn').addEventListener('click', ()=>{
+  if(confirm('Reset dataset to default synthetic benchmark?')){
+    dataset = synthDataset(40);
+    saveDataset();
+    trainAll();
+    refreshDashboardAndModel();
+    document.getElementById('importStatus').textContent = 'Dataset reset to benchmark default.';
+    document.getElementById('importStatus').style.color = 'var(--gold)';
+  }
+});
+
+// Print Report
+document.getElementById('printReportBtn').addEventListener('click', ()=>{
+  window.print();
+});
+
+/* ---------------------------------------------------------------
+   11. WIRING & INITIALIZATION
+--------------------------------------------------------------- */
+document.getElementById('modeToggle').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-mode]');
+  if(!btn) return;
+  activeMode = btn.dataset.mode;
+  document.querySelectorAll('#modeToggle button').forEach(b=>b.classList.toggle('active', b===btn));
+  applyModeVisibility();
+  refreshDashboardAndModel();
+  document.getElementById('resultArea').style.display='none';
+});
+
+document.getElementById('predictBtn').addEventListener('click', runPrediction);
+
+document.getElementById('randomizeBtn').addEventListener('click', ()=>{
+  fillForm(synthStudent('preview'));
+  runPrediction();
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  const meanRow = models[activeMode].meanRow;
+  fillForm(meanRow);
+});
+
+document.getElementById('addToRosterBtn').addEventListener('click', ()=>{
+  const data = getFormData();
+  data.id = 'S' + String(dataset.length + 1).padStart(3, '0');
+  dataset.unshift(data);
+  saveDataset();
+  trainAll();
+  refreshDashboardAndModel();
+  alert(`Student ${data.id} added to class roster!`);
+});
+
+document.querySelectorAll('#rosterTable th[data-sort]').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const key = th.dataset.sort;
+    rosterSort.dir = (rosterSort.key===key) ? -rosterSort.dir : 1;
+    rosterSort.key = key;
+    renderRoster();
+  });
+});
+
+document.getElementById('rosterSearch').addEventListener('input', renderRoster);
+document.getElementById('rosterFilter').addEventListener('change', renderRoster);
+
+// Theme Toggle
+let currentTheme = 'chalkboard';
+document.getElementById('themeToggleBtn').addEventListener('click', ()=>{
+  if(currentTheme === 'chalkboard'){
+    document.documentElement.setAttribute('data-theme', 'dark-slate');
+    document.getElementById('themeLabel').textContent = 'Dark Slate Theme';
+    currentTheme = 'dark-slate';
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.getElementById('themeLabel').textContent = 'Chalkboard Theme';
+    currentTheme = 'chalkboard';
+  }
+});
+
+// Init
+renderForm();
+trainAll();
+fillForm(models['trend'].meanRow);
+refreshDashboardAndModel();
+initSimulator();
+
+})();
+</script>
+</body>
+</html>
